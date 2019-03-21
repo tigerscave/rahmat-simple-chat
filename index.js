@@ -1,17 +1,38 @@
-const app = require('express')();
-const http = require('http').Server(app)
-const io = require('socket.io')(http)
+const express = require('express');
+const app = express()
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-// app.get('/', (req, res) => {
-// 	res.send('<h1>Hello World</h1>')
-// });
+users = [];
+connections = [];
+
+http.listen(process.env.PORT || 3000);
+console.log('Server running ...');
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/src/index.html');
 });
 
-http.listen(3000, () => {
-	console.log('listening on * 3000')
-})
+app.get('/handleDom.js', (req, res) => {
+    res.sendFile(__dirname + '/src/handleDom.js');
+});
+
+io.on('connection', (socket) => {
+
+    connections.push(socket);
+    console.log('connected: %s sockets connected', connections.length)
+
+    // Disconnect
+    socket.on('disconnect', () => {
+        connections.splice(connections.indexOf(socket), 1);
+        console.log('Disconnected: %s sockets connected', connections.length);
+    });
+
+    // Send Messages
+    socket.on('send messages', (msg) => {
+        console.log('messages', msg);
+        io.emit('send messages', msg)
+    })
+});
 
 
